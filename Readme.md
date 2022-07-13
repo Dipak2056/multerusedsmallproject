@@ -37,3 +37,28 @@ const upload = multer({ storage });
 
 11. to check the type of file or do file filter we just neeed to check if the mimetype is what we are going to accept, we did that in the function written as the fileFilter, where we have splitted the file.mimtype and compared it with the image, if it passes from there, we are writing callback function with cb(null,true),here null is the error. true--> is giving acceptance
 12. to limit the file size simply pass another argument, object limits with property filesize and the value in bits, you will be good to go
+
+### to upload the files in the aws follow these steps:-
+
+## must have active s3 bucket or create one and download accesskey and the secretkey and the bucket name
+
+1. create one helper file for the configuration here i have created s3Service.js
+   ===> this file will require npm package aws-sdk to work with so npm i aws-sdk
+2. store the access key, secret key,, bucket name in the .env file and
+3. export new fuction as this:-
+   ===>
+   exports.s3Uploadv2 = async (file) => {
+   const s3 = new S3();
+   const param = {
+   Bucket: process.env.AWS_BUCKET_NAME,
+   Key: `uploads/${uuid()}-${file.originalname}`,
+   Body: file.buffer,
+   };
+   const result = await s3.upload(param).promise();
+   return result;
+   };
+
+4. after you get the result head to the middleware where you want to use this configuration, in my case it is index.js
+   => here, you will create a storage as memoryStorage
+   => but in the post method await for the s3UploadV2(file) to execute and pass that as a
+   response to set the response

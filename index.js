@@ -46,12 +46,12 @@ const upload = multer({
   fileFilter,
   limits: { fileSize: 10000000, files: 2 },
 });
-app.post("/upload", upload.array("file"), (req, res) => {
-    const file = req.files[0];
-    const result = await s3Uploadv2(file)
+app.post("/upload", upload.array("file"), async (req, res) => {
+  const file = req.files[0];
+  const result = await s3Uploadv2(file);
   res.json({
     status: "success",
-    result
+    result,
   });
 });
 
