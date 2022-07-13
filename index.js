@@ -1,5 +1,7 @@
+require("dotenv").config();
 const express = require("express");
 const multer = require("multer");
+const { s3Uploadv2 } = require("./s3Service");
 const app = express();
 //now multer instantiation
 const uploadmini = multer({ dest: "uploads/" });
@@ -18,16 +20,19 @@ const uuid = require("uuid").v4;
 //   });
 
 //for custom filename
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads");
-  },
-  filename: (req, file, cb) => {
-    const { originalname } = file;
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, "uploads");
+//   },
+//   filename: (req, file, cb) => {
+//     const { originalname } = file;
 
-    cb(null, `${uuid()}-${originalname}`);
-  },
-});
+//     cb(null, `${uuid()}-${originalname}`);
+//   },
+// });
+
+const storage = multer.memoryStorage();
+
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.split("/")[0] === "image") {
     cb(null, true);
@@ -42,8 +47,11 @@ const upload = multer({
   limits: { fileSize: 10000000, files: 2 },
 });
 app.post("/upload", upload.array("file"), (req, res) => {
+    const file = req.files[0];
+    const result = await s3Uploadv2(file)
   res.json({
     status: "success",
+    result
   });
 });
 
@@ -60,6 +68,7 @@ app.post("/upload", upload.array("file"), (req, res) => {
 //   });
 // });
 
+//error handler
 app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {
